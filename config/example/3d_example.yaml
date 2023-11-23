@@ -1,0 +1,35 @@
+generator: fastHGP.examples.3d_example
+
+kernel:
+  _target_: fastHGP.kernels.SE
+  lengthscale: 1.0
+  variance: 0.25
+
+prior:
+  _target_: gpjax.Prior
+  mean_function:
+    _target_: gpjax.mean_functions.Zero
+  kernel: ${..kernel}
+
+likelihood:
+  _target_: gpjax.likelihoods.Gaussian
+  num_datapoints: ${..N}
+  obs_noise: 
+    _target_: jax.numpy.array
+    object: [0.01]
+
+bf:
+  _target_: ${example.generator}.build_bf
+  m: 1
+  L: 1.25
+  center: 0
+
+N: 300
+data_generator: 
+  _partial_: true
+  _target_: ${..generator}.generate_data
+  N: ${..N}
+  kernel: 
+    _target_: gpjax.kernels.RBF
+    lengthscale: ${...kernel.lengthscale}
+    variance: ${...kernel.variance}

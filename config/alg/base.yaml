@@ -1,0 +1,3 @@
+prior: ${example.prior}
+likelihood: ${example.likelihood}
+bf: ${example.bf}

@@ -1,0 +1,120 @@
+from dataclasses import dataclass
+from itertools import product
+import jax
+import jax.numpy as jnp
+import gpjax as gpx
+from gpjax.base import param_field, static_field
+from gpjax.typing import ScalarFloat
+from gpjax.gaussian_distribution import GaussianDistribution
+from jaxtyping import Float, Array
+import cola
+from .utils import (
+    TB, 
+    TB_diag, 
+    B, 
+    B_diag, 
+    gamma
+)
+from .kernels import LaplaceBF
+from .gp_utils import (
+    predict, 
+    dual_to_mean,
+    vpredict
+)
+from .hgp import HGP
+
+@dataclass 
+class SHGP(gpx.gps.AbstractPosterior):
+    """An N-D implementation of a "sparse" HGP, i.e., a HGP where only the necessary statistics are stored.
+    
+    The SHGP stores (alpha, Gamma) where alpha is the dual to the mean of an HGP and Gamma is an array of sufficient statistics in order to create B, which is the dual of the covariance of an HGP.
+
+    Further, the SHGP attains fast predictions by approximately selecting the most important basis functions according to the criterion
+    $$
+    L(\theta) = | f(t) - \hat{f}(t) |_2^2
+    $$
+    where $\theta$ corresponds to the parameters of the posterior distribution of the GP (m, S). Assuming that the components we select are contained in $J$, the criterion can be upper bounded as 
+    $$
+    L \leq \sum_{j\notin J} | m_j |^2,
+    $$
+    and we can thus select the components corresponding to the largest mean values.
+    The number of components are automatically selected such that components with a mean of atleast the tolerance are included.
+
+    Parameters
+    ----------
+    bf : LaplaceBF
+        The basis functions to use.
+    jitter : float
+        The jitter to use when inverting possibly singular matrices
+    tolerance : float
+        The tolerance of the BF inclusion.
+
+    """
+    bf: LaplaceBF = param_field(default=None, trainable=False)
+    jitter: ScalarFloat = static_field(1e-6)
+    alpha: Float[Array, "M"] = param_field(jnp.zeros((1,)), trainable=False)
+    Gamma: Float[Array, "M**D"] = param_field(jnp.zeros((1,)), trainable=False)
+    tolerance: float = param_field(default=1e-3, trainable=False)
+
+    def __post_init__(self):
+        m = self.bf.num_bfs
+        M = self.bf.M
+        D = len(m)
+        self.alpha = jnp.zeros((M,))
+        self.p = jnp.array(list(product(*[[-1, 1]]*D))) # permutations
+        self.unique_k = jnp.vstack([x.flatten() for x in jnp.meshgrid(*[jnp.arange(1-mi, 2*mi+1) for mi in m])]).T
+        self.Gamma = jnp.zeros((self.unique_k.shape[0],))
+        self.indices = jnp.vstack([x.flatten() for x in jnp.meshgrid(*self.bf.j)]).T
+
+    def reduce(self, inds):
+        return self.replace(alpha=self.alpha[inds],
+                            indices=self.indices[inds],
+                            bf=self.bf.replace(js=self.bf.js[inds]))
+
+    predict = HGP.predict
+
+    def update_with_batch(self, data):
+        g = gamma(data.X, self.unique_k, self.bf.L)
+        Phi = self.bf(data.X)
+        alpha = jnp.matmul(Phi.T, data.y).squeeze()
+        return self.replace(Gamma=self.Gamma + g.reshape(self.Gamma.shape), 
+                            alpha=self.alpha + alpha)
+
+    @property
+    def B(self):
+        return B(self.Gamma, self.indices, self.bf.num_bfs, self.p)
+
+    @property
+    def B_diag(self):
+        return B_diag(self.Gamma, self.indices, self.bf.num_bfs, self.p)
+
+    @property
+    def dual_parameters(self):
+        return (self.alpha, self.B)
+
+    @property
+    def mean_parameters(self):
+        return dual_to_mean(self.alpha, self.B, self.bf, self.prior.kernel.spectral_density, self.likelihood.obs_noise)
+
+@dataclass
+class TSHGP(SHGP):
+    """
+    Saves the "necessary statistics" in tensor format instead -- allows easier indexing and marginally faster computation.
+    """
+    def __post_init__(self):
+        m = self.bf.num_bfs
+        D = len(m)
+        self.alpha = jnp.zeros((jnp.prod(m),))
+        self.p = jnp.array(list(product(*[[-1, 1]]*D))) # permutations
+        self.unique_k = jnp.vstack([x.flatten() for x in jnp.meshgrid(*[jnp.arange(1-mi, 2*mi+1) for mi in m])]).T
+        d = int(jnp.ceil(self.unique_k.shape[0]**(1/D)))
+        self.Gamma = jnp.zeros([d]*D)
+        self.indices = jnp.vstack([x.flatten() for x in jnp.meshgrid(*self.bf.j)]).T
+
+    @property
+    def B(self):
+        return TB(self.Gamma, self.indices, self.bf.num_bfs, self.p)
+
+    @property
+    def B_diag(self):
+        return TB_diag(self.Gamma, self.indices, self.bf.num_bfs, self.p)
