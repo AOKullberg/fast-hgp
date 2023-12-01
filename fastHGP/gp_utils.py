@@ -88,7 +88,8 @@ def mean_to_dual(m,
 
     SRinv = jsp.linalg.cho_solve((SR, True), jnp.identity(SR.shape[-1]))
     lambda_j = bf.eigenvalues()
-    Lambdainv = jnp.diag(1/jnp.prod(jnp.atleast_2d(spectral_density(jnp.sqrt(lambda_j))), axis=0))
+    Lambdainv = jnp.diag(1/jax.vmap(spectral_density, 0, 0)(jnp.sqrt(lambda_j)))
+    # Lambdainv = jnp.diag(1/jnp.prod(jnp.atleast_2d(spectral_density(jnp.sqrt(lambda_j))), axis=0))
     B = noise_cov * (SRinv - Lambdainv)
     return (alpha, B)
 
@@ -123,7 +124,8 @@ def dual_to_mean(alpha,
         Mean parametrization of the posterior
     """    
     lambda_j = bf.eigenvalues()
-    Lambdainv = jnp.diag(1/jnp.prod(jnp.atleast_2d(spectral_density(jnp.sqrt(lambda_j))), axis=0))
+    Lambdainv = jnp.diag(1/jax.vmap(spectral_density, 0, 0)(jnp.sqrt(lambda_j)))
+    # Lambdainv = jnp.diag(1/jnp.prod(jnp.atleast_2d(spectral_density(jnp.sqrt(lambda_j))), axis=0))
     Sigmainv = B + noise_cov * Lambdainv
     SR, _ = jsp.linalg.cho_factor(Sigmainv, lower=True)
     Sigma = jsp.linalg.cho_solve((SR, True), jnp.identity(SR.shape[-1]))

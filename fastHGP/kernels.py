@@ -14,10 +14,10 @@ class LaplaceBF(gpx.base.Module):
 
     def __post_init__(self):
         try:
-            self.j = jnp.array([jnp.arange(1, int(m) + 1) for m in self.num_bfs])
+            self.j = [jnp.arange(1, int(m) + 1) for m in self.num_bfs]
         except:
-            self.j = jnp.expand_dims(jnp.arange(1, self.num_bfs + 1), axis=0)
-        self.js = jnp.array(list(product(*[x.flatten() for x in jnp.split(self.j, self.j.shape[0])])))
+            self.j = jnp.arange(1, self.num_bfs + 1)
+        self.js = jnp.array(list(product(*[x.flatten() for x in self.j])))
         self.num_bfs = jnp.atleast_1d(jnp.array(self.num_bfs)).astype(int)
         D  = len(self.num_bfs)
         self.L = jnp.atleast_1d(jnp.array(self.L))
@@ -44,7 +44,7 @@ class LaplaceBF(gpx.base.Module):
         j = self.js
         L = self.L
         lambda_j = ( jnp.pi * j / (2 * L) )**2
-        return lambda_j.T
+        return lambda_j
 
 
 @dataclass
@@ -67,4 +67,4 @@ class SE(gpx.kernels.RBF):
             The spectral density of the kernel at specific inputs.
         """    
         l, s2f = self.lengthscale, self.variance
-        return s2f * jnp.sqrt( 2 * jnp.pi * l**2) * jnp.exp( - 1 / 2 * x**2 * l**2)
+        return jnp.prod(s2f * jnp.sqrt( 2 * jnp.pi * l**2) * jnp.exp( - 1 / 2 * x**2 * l**2))

@@ -1,13 +1,10 @@
 from dataclasses import dataclass
 from itertools import product
-import jax
 import jax.numpy as jnp
 import gpjax as gpx
 from gpjax.base import param_field, static_field
 from gpjax.typing import ScalarFloat
-from gpjax.gaussian_distribution import GaussianDistribution
 from jaxtyping import Float, Array
-import cola
 from .utils import (
     TB, 
     TB_diag, 
@@ -17,11 +14,14 @@ from .utils import (
 )
 from .kernels import LaplaceBF
 from .gp_utils import (
-    predict, 
     dual_to_mean,
     vpredict
 )
 from .hgp import HGP
+from fastHGP.selectors import (
+    Selector,
+    BoundSelector
+)
 
 @dataclass 
 class SHGP(gpx.gps.AbstractPosterior):
@@ -46,15 +46,16 @@ class SHGP(gpx.gps.AbstractPosterior):
         The basis functions to use.
     jitter : float
         The jitter to use when inverting possibly singular matrices
-    tolerance : float
-        The tolerance of the BF inclusion.
+    approximate_selector : fastHGP.Selector
+        A basis function selector for approximate predictions.
 
     """
     bf: LaplaceBF = param_field(default=None, trainable=False)
     jitter: ScalarFloat = static_field(1e-6)
     alpha: Float[Array, "M"] = param_field(jnp.zeros((1,)), trainable=False)
     Gamma: Float[Array, "M**D"] = param_field(jnp.zeros((1,)), trainable=False)
-    tolerance: float = param_field(default=1e-3, trainable=False)
+    approximate_selector: Selector = param_field(default_factory=lambda: BoundSelector(),
+                                                 trainable=False)
 
     def __post_init__(self):
         m = self.bf.num_bfs

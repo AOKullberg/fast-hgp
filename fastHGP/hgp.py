@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import jax
 import jax.numpy as jnp
 import gpjax as gpx
 from gpjax.gaussian_distribution import GaussianDistribution
@@ -27,13 +28,20 @@ from .gp_utils import (
     dual_to_mean
 )
 
+from fastHGP.selectors import (
+    Selector,
+    BoundSelector
+)
+
+
 @dataclass
 class HGP(gpx.gps.AbstractPosterior):
     bf: LaplaceBF = param_field(default=None, trainable=False)
     jitter: ScalarFloat = static_field(1e-6)
     alpha: Float[Array, "M"] = param_field(jnp.zeros((1,)), trainable=False)
     B: Float[Array, "M M"] = param_field(jnp.identity(1), trainable=False)
-    tolerance: float = param_field(default=1e-3, trainable=False)
+    approximate_selector: Selector = param_field(default_factory=lambda: BoundSelector(),
+                                                 trainable=False)
 
     def __post_init__(self):
         M = self.bf.M
@@ -48,12 +56,12 @@ class HGP(gpx.gps.AbstractPosterior):
     def predict(self, test_inputs, full_cov=True, approx=False):
         if approx:
             lambda_j = self.bf.eigenvalues()
-            Lambdainv = 1/jnp.prod(jnp.atleast_2d(self.prior.kernel.spectral_density(jnp.sqrt(lambda_j))), axis=0)
-            mi = jnp.abs((1/(self.B_diag + Lambdainv)) * self.alpha) # Approximate mean of each component
+            Lambdainv = 1/jax.vmap(self.prior.kernel.spectral_density, 0, 0)(jnp.sqrt(lambda_j))
+            # Lambdainv = 1/jnp.prod(jnp.atleast_2d(self.prior.kernel.spectral_density(jnp.sqrt(lambda_j))), axis=0)
+            mi = ((1/(self.B_diag + Lambdainv)) * self.alpha)**2 # Approximate mean of each component
             inds = jnp.flipud(jnp.argsort(mi))
             dL = mi[inds] # The delta cost of leaving out each component
-            Nj = jnp.argmax(dL < self.tolerance)
-            inds = inds[:Nj]
+            inds = self.approximate_selector(dL, inds)
             gp = self.reduce(inds)
             m, S = gp.mean_parameters
             bf = gp.bf
@@ -108,7 +116,7 @@ class HGP(gpx.gps.AbstractPosterior):
                                                             [-new_bf.L + l, 
                                                              -self.bf.L - l]])
         lambda_j = new_bf.eigenvalues()
-        P = jnp.diag(self.prior.kernel.spectral_density(jnp.sqrt(lambda_j)))
+        P = jnp.diag(jax.vmap(self.prior.kernel.spectral_density, 0, 0)(jnp.sqrt(lambda_j)))
         m, S = project_regularized(self.bf, 
                                      new_bf, 
                                      self.mean_parameters, 
