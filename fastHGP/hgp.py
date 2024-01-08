@@ -30,7 +30,8 @@ from .gp_utils import (
 
 from fastHGP.selectors import (
     Selector,
-    BoundSelector
+    BoundSelector,
+    DualCost
 )
 
 
@@ -40,7 +41,7 @@ class HGP(gpx.gps.AbstractPosterior):
     jitter: ScalarFloat = static_field(1e-6)
     alpha: Float[Array, "M"] = param_field(jnp.zeros((1,)), trainable=False)
     B: Float[Array, "M M"] = param_field(jnp.identity(1), trainable=False)
-    approximate_selector: Selector = param_field(default_factory=lambda: BoundSelector(),
+    approximate_selector: Selector = param_field(default_factory=lambda: BoundSelector(DualCost()),
                                                  trainable=False)
 
     def __post_init__(self):
@@ -55,13 +56,14 @@ class HGP(gpx.gps.AbstractPosterior):
     
     def predict(self, test_inputs, full_cov=True, approx=False):
         if approx:
-            lambda_j = self.bf.eigenvalues()
-            Lambdainv = 1/jax.vmap(self.prior.kernel.spectral_density, 0, 0)(jnp.sqrt(lambda_j))
-            # Lambdainv = 1/jnp.prod(jnp.atleast_2d(self.prior.kernel.spectral_density(jnp.sqrt(lambda_j))), axis=0)
-            mi = ((1/(self.B_diag + Lambdainv)) * self.alpha)**2 # Approximate mean of each component
-            inds = jnp.flipud(jnp.argsort(mi))
-            dL = mi[inds] # The delta cost of leaving out each component
-            inds = self.approximate_selector(dL, inds)
+            inds = self.approximate_selector(test_inputs, self)
+            # lambda_j = self.bf.eigenvalues()
+            # Lambdainv = 1/jax.vmap(self.prior.kernel.spectral_density, 0, 0)(jnp.sqrt(lambda_j))
+            # # Lambdainv = 1/jnp.prod(jnp.atleast_2d(self.prior.kernel.spectral_density(jnp.sqrt(lambda_j))), axis=0)
+            # mi = ((1/(self.B_diag + Lambdainv)) * self.alpha)**2 # Approximate mean of each component
+            # inds = jnp.flipud(jnp.argsort(mi))
+            # dL = mi[inds] # The delta cost of leaving out each component
+            # inds = self.approximate_selector(dL, inds)
             gp = self.reduce(inds)
             m, S = gp.mean_parameters
             bf = gp.bf

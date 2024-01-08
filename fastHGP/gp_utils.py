@@ -31,6 +31,7 @@ def update_with_batch(qu,
     B_new = B.squeeze() + Bi.squeeze()
     return dual_to_mean(alpha_new, B_new, bf, noise_cov)
 
+@jax.jit
 def compute_dual(bf, data):
     """Compute dual representation of the given data.
 

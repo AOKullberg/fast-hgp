@@ -3,16 +3,17 @@ import jax.numpy as jnp
 import jax.scipy as jsp
 import cola
 from gpjax.gaussian_distribution import GaussianDistribution
+from .utils import integrate
 
 
-def integrate(fun, limits, N=100, args=None):
-    # Chebyshev-Gauss integration (second kind)
-    i = jnp.arange(1, N+1)
-    xi = jnp.cos(i/(N+1) * jnp.pi)
-    wi = jnp.pi/(N+1)*jnp.sin(i/(N+1) * jnp.pi)
-    a, b = limits
-    scale = (b - a)/2
-    return scale * wi @ fun(scale * xi + (a + b)/2, *args)
+# def integrate(fun, limits, N=100, args=[]):
+#     # Chebyshev-Gauss integration (second kind)
+#     i = jnp.arange(1, N+1)
+#     xi = jnp.cos(i/(N+1) * jnp.pi)
+#     wi = jnp.pi/(N+1)*jnp.sin(i/(N+1) * jnp.pi)
+#     a, b = limits
+#     scale = (b - a)/2
+#     return scale * wi @ fun(scale * xi + (a + b)/2, *args)
 
 
 def project(old_bf, new_bf, qu, **kwargs):

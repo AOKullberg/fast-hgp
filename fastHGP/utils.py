@@ -5,7 +5,7 @@ import jax.numpy as jnp
 @jax.jit
 def gamma(x, ks, Ld):
     # Compute all possible gammas
-    return jnp.prod(1/Ld) * jnp.sum(vxgamma(x, Ld, ks), axis=0)
+    return jnp.prod(1/Ld) * jnp.sum(vxgamma(x, ks, Ld), axis=0)
 
 @jax.jit
 def TT_gamma(Gamma, md, i, j, p):
@@ -16,7 +16,7 @@ def TT_gamma(Gamma, md, i, j, p):
     # Slicing doesn't work for JIT:ed things -- the slices can't be calculated unfortunately
     # slices = get_slice(k - (1 - md))
     # return c @ Gamma_t[slices].flatten()
-    return c @ Gamma[*(k - (1 - md)).T]
+    return c @ Gamma[*(k - (1 - md)).T.astype(int)]
 
 @jax.jit
 def TB(Gamma, indices, md, p):
@@ -42,7 +42,7 @@ def T_gamma(Gamma, md, i, j, p):
     k = i + p * j
     c = jnp.prod(p, axis=1)
     indices = jax.vmap(ind, (0, None), 0)(k, md)
-    return c @ Gamma[indices]
+    return c @ Gamma[indices.astype(int)]
 
 @jax.jit
 def B(Gamma, indices, md, p):
@@ -66,7 +66,7 @@ def B_diag(Gamma, indices, md, p):
 # Theta computation
 theta = lambda x, i, L: jnp.pi * i * (x + L) / (2 * L) - jnp.pi / 2
 # Gamma computation for a **particular** k
-def gamma_k(x, Ls, kis):
+def gamma_k(x, kis, Ls):
     """
     x - 1d vector -- particular data point
     Ls - a vector of Ld, d=1,...,D (1 x D)
@@ -76,7 +76,7 @@ def gamma_k(x, Ls, kis):
     return 1 / (2 ** D) * jnp.prod(jnp.sin(theta(x, kis, Ls)))
 
 # Vectorized over different k
-vkgamma = jax.vmap(gamma_k, (None, None, 0), 0)
+vkgamma = jax.vmap(gamma_k, (None, 0, None), 0)
 # Vectorized over x and k
 vxgamma = jax.jit(jax.vmap(vkgamma, (0, None, None), 0))
 
@@ -98,3 +98,12 @@ def ind(k, md):
     # for i in range(D-1):
     #     index += 3**(D-(i+1)) * jnp.prod(md[i+1:]) * (k[i] - (1 - md[i]))
     # return index + (k[-1] - (1 - md[-1]))
+
+def integrate(fun, limits, N=100, args=[]):
+    # Chebyshev-Gauss integration (second kind)
+    i = jnp.arange(1, N+1)
+    xi = jnp.cos(i/(N+1) * jnp.pi)[:, None]
+    wi = jnp.pi/(N+1)*jnp.sin(i/(N+1) * jnp.pi)
+    a, b = limits
+    scale = (b - a)/2
+    return jnp.prod(scale) * wi @ fun(scale * xi + (a + b)/2, *args)

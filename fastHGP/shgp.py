@@ -65,7 +65,8 @@ class SHGP(gpx.gps.AbstractPosterior):
         self.p = jnp.array(list(product(*[[-1, 1]]*D))) # permutations
         self.unique_k = jnp.vstack([x.flatten() for x in jnp.meshgrid(*[jnp.arange(1-mi, 2*mi+1) for mi in m])]).T
         self.Gamma = jnp.zeros((self.unique_k.shape[0],))
-        self.indices = jnp.vstack([x.flatten() for x in jnp.meshgrid(*self.bf.j)]).T
+        self.indices = self.bf.js
+        # self.indices = jnp.vstack([x.flatten() for x in jnp.meshgrid(*self.bf.j)]).T
 
     def reduce(self, inds):
         return self.replace(alpha=self.alpha[inds],
@@ -105,12 +106,13 @@ class TSHGP(SHGP):
     def __post_init__(self):
         m = self.bf.num_bfs
         D = len(m)
-        self.alpha = jnp.zeros((jnp.prod(m),))
+        self.alpha = jnp.zeros((jnp.prod(m).astype(int),))
         self.p = jnp.array(list(product(*[[-1, 1]]*D))) # permutations
         self.unique_k = jnp.vstack([x.flatten() for x in jnp.meshgrid(*[jnp.arange(1-mi, 2*mi+1) for mi in m])]).T
         d = int(jnp.ceil(self.unique_k.shape[0]**(1/D)))
         self.Gamma = jnp.zeros([d]*D)
-        self.indices = jnp.vstack([x.flatten() for x in jnp.meshgrid(*self.bf.j)]).T
+        self.indices = self.bf.js
+        # self.indices = jnp.vstack([x.flatten() for x in jnp.meshgrid(*self.bf.j)]).T
 
     @property
     def B(self):
