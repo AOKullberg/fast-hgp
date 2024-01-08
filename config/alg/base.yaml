@@ -1,3 +1,4 @@
-prior: ${example.prior}
-likelihood: ${example.likelihood}
-bf: ${example.bf}
+prior: ${prior}
+likelihood: ${likelihood}
+bf: ${bf}
+approximate_selector: difference

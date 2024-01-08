@@ -12,5 +12,6 @@ hydra:
   sweeper:
     params:
       alg: choice(SHGP, TSHGP, HGP)
-      example.kernel.lengthscale: choice(0.01, 0.05, 0.1, 0.5, 1.0, 2.0)
-      example.bf.m: range(2, 15)
+      # example.kernel.lengthscale: choice(0.01, 0.05, 0.1, 0.5, 1.0, 2.0)
+      alg.approximate_selector.fraction: choice(0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.25, 0.3, 0.5)
+      example.bf.m: range(2, 21)

@@ -1,0 +1,4 @@
+_target_: fastHGP.selectors.FractionSelector
+fraction: 1e-1
+cost: 
+  _target_: fastHGP.selectors.DualCost

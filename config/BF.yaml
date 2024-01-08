@@ -1,5 +1,5 @@
 _partial_: true
-_target_: ${example.generator}.build_bf
+_target_: ${generator}.build_bf
 num_bfs: 1
 L: 1.25
 center: 0
