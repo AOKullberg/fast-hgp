@@ -7,7 +7,7 @@ def generate_data(kernel, N=300, key=jr.PRNGKey(13)):
     x3d = jr.uniform(key, shape=(N, 3))*2-1
     meanf = gpx.mean_functions.Zero()
     kernel = kernel.replace(lengthscale=jnp.ones((3,)) * kernel.lengthscale)
-    fprior = gpx.Prior(mean_function=meanf, kernel=kernel)
+    fprior = gpx.gps.Prior(mean_function=meanf, kernel=kernel)
     f = fprior.sample_approx(num_samples=1, key=key)
     y3d = f(x3d)
     xtest = jnp.vstack([x.flatten() for x in jnp.meshgrid(*([jnp.linspace(-1, 1, 15)] * 3))]).T

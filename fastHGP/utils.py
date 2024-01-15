@@ -2,7 +2,7 @@ from itertools import combinations_with_replacement
 import jax
 import jax.numpy as jnp
 
-@jax.jit
+# @jax.jit
 def gamma(x, ks, Ld):
     # Compute all possible gammas
     return jnp.prod(1/Ld) * jnp.sum(vxgamma(x, ks, Ld), axis=0)
@@ -66,6 +66,7 @@ def B_diag(Gamma, indices, md, p):
 # Theta computation
 theta = lambda x, i, L: jnp.pi * i * (x + L) / (2 * L) - jnp.pi / 2
 # Gamma computation for a **particular** k
+@jax.jit
 def gamma_k(x, kis, Ls):
     """
     x - 1d vector -- particular data point
@@ -76,7 +77,7 @@ def gamma_k(x, kis, Ls):
     return 1 / (2 ** D) * jnp.prod(jnp.sin(theta(x, kis, Ls)))
 
 # Vectorized over different k
-vkgamma = jax.vmap(gamma_k, (None, 0, None), 0)
+vkgamma = jax.jit(jax.vmap(gamma_k, (None, 0, None), 0))
 # Vectorized over x and k
 vxgamma = jax.jit(jax.vmap(vkgamma, (0, None, None), 0))
 

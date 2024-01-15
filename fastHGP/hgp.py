@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import jax
 import jax.numpy as jnp
 import gpjax as gpx
-from gpjax.gaussian_distribution import GaussianDistribution
+from gpjax.distributions import GaussianDistribution
 from gpjax.base import (
     static_field, 
     param_field
@@ -41,13 +41,16 @@ class HGP(gpx.gps.AbstractPosterior):
     jitter: ScalarFloat = static_field(1e-6)
     alpha: Float[Array, "M"] = param_field(jnp.zeros((1,)), trainable=False)
     B: Float[Array, "M M"] = param_field(jnp.identity(1), trainable=False)
-    approximate_selector: Selector = param_field(default_factory=lambda: BoundSelector(DualCost()),
-                                                 trainable=False)
+    approximate_selector: Selector = static_field(default_factory=lambda: BoundSelector(DualCost()))
 
     def __post_init__(self):
         M = self.bf.M
         self.alpha = jnp.zeros((M,))
         self.B = jnp.zeros((M, M))
+    
+    @property
+    def M(self):
+        return self.bf.M
     
     def reduce(self, inds):
         return self.replace(alpha=self.alpha[inds],
@@ -106,7 +109,7 @@ class HGP(gpx.gps.AbstractPosterior):
                                 S, 
                                 new_bf, 
                                 self.prior.kernel.spectral_density, 
-                                self.likelihood.obs_noise)
+                                self.likelihood.obs_stddev)
         return self.replace(alpha=alpha, B=B, bf=new_bf)
     
     def change_basis_regularized(self, new_bf, **kwargs):
@@ -128,7 +131,7 @@ class HGP(gpx.gps.AbstractPosterior):
                                 S, 
                                 new_bf, 
                                 self.prior.kernel.spectral_density, 
-                                self.likelihood.obs_noise)
+                                self.likelihood.obs_stddev)
         return self.replace(alpha=alpha, B=B, bf=new_bf)
 
     def change_basis_mm(self, new_bf, inputs):
@@ -137,7 +140,7 @@ class HGP(gpx.gps.AbstractPosterior):
                                 qu_new.covariance(), 
                                 new_bf, 
                                 self.prior.kernel.spectral_density, 
-                                self.likelihood.obs_noise)
+                                self.likelihood.obs_stddev)
         return self.replace(alpha=alpha, B=B, bf=new_bf)
     
     def change_basis_regularized_mm(self, new_bf, D1, D2):
@@ -152,9 +155,9 @@ class HGP(gpx.gps.AbstractPosterior):
                                 qu_new.covariance(), 
                                 new_bf, 
                                 self.prior.kernel.spectral_density, 
-                                self.likelihood.obs_noise)
+                                self.likelihood.obs_stddev)
         return self.replace(alpha=alpha, B=B, bf=new_bf)
 
     @property
     def mean_parameters(self):
-        return dual_to_mean(self.alpha, self.B, self.bf, self.prior.kernel.spectral_density, self.likelihood.obs_noise)
+        return dual_to_mean(self.alpha, self.B, self.bf, self.prior.kernel.spectral_density, self.likelihood.obs_stddev)

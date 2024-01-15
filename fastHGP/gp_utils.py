@@ -6,7 +6,7 @@ import jax.scipy as jsp
 def update_with_batch(qu, 
                       bf, 
                       data, 
-                      noise_cov):
+                      noise_std):
     """Update a given posterior with a new batch of data.
 
     Parameters
@@ -25,11 +25,11 @@ def update_with_batch(qu,
     GaussianDistribution
         The new posterior in mean parametrization
     """    
-    alpha, B = mean_to_dual(qu.mean(), qu.covariance(), bf, noise_cov)
+    alpha, B = mean_to_dual(qu.mean(), qu.covariance(), bf, noise_std)
     alphai, Bi = compute_dual(bf, data)
     alpha_new = alpha.squeeze() + alphai.squeeze()
     B_new = B.squeeze() + Bi.squeeze()
-    return dual_to_mean(alpha_new, B_new, bf, noise_cov)
+    return dual_to_mean(alpha_new, B_new, bf, noise_std)
 
 @jax.jit
 def compute_dual(bf, data):
@@ -58,7 +58,7 @@ def mean_to_dual(m,
                  S, 
                  bf, 
                  spectral_density, 
-                 noise_cov):
+                 noise_std):
     """Move from mean to dual representation of a posterior on bf weights.
 
     Go from mean parameters $(m, S)$ to dual parameters $(\alpha, B)$, i.e.,
@@ -85,13 +85,13 @@ def mean_to_dual(m,
     """    
     jitter = 1e-6
     SR, _ = jsp.linalg.cho_factor(S + jnp.identity(S.shape[-1]) * jitter, lower=True)
-    alpha = noise_cov * jsp.linalg.cho_solve((SR, True), m)
+    alpha = noise_std**2 * jsp.linalg.cho_solve((SR, True), m)
 
     SRinv = jsp.linalg.cho_solve((SR, True), jnp.identity(SR.shape[-1]))
     lambda_j = bf.eigenvalues()
     Lambdainv = jnp.diag(1/jax.vmap(spectral_density, 0, 0)(jnp.sqrt(lambda_j)))
     # Lambdainv = jnp.diag(1/jnp.prod(jnp.atleast_2d(spectral_density(jnp.sqrt(lambda_j))), axis=0))
-    B = noise_cov * (SRinv - Lambdainv)
+    B = noise_std**2 * (SRinv - Lambdainv)
     return (alpha, B)
 
 @partial(jax.jit, static_argnums=(3,))
@@ -99,7 +99,7 @@ def dual_to_mean(alpha,
                  B, 
                  bf, 
                  spectral_density, 
-                 noise_cov):
+                 noise_std):
     """Move from dual to mean representation of a posterior on bf weights.
 
     Go from dual parameters $(\alpha, B)$ to mean parameters $(m, S)$, i.e.,
@@ -127,11 +127,11 @@ def dual_to_mean(alpha,
     lambda_j = bf.eigenvalues()
     Lambdainv = jnp.diag(1/jax.vmap(spectral_density, 0, 0)(jnp.sqrt(lambda_j)))
     # Lambdainv = jnp.diag(1/jnp.prod(jnp.atleast_2d(spectral_density(jnp.sqrt(lambda_j))), axis=0))
-    Sigmainv = B + noise_cov * Lambdainv
+    Sigmainv = B + noise_std**2 * Lambdainv
     SR, _ = jsp.linalg.cho_factor(Sigmainv, lower=True)
     Sigma = jsp.linalg.cho_solve((SR, True), jnp.identity(SR.shape[-1]))
     m = Sigma @ alpha
-    S = noise_cov * Sigma
+    S = noise_std**2 * Sigma
     return (jnp.atleast_1d(m.squeeze()), S)
 
 @jax.jit

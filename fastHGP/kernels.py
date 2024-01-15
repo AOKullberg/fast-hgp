@@ -18,8 +18,9 @@ class LaplaceBF(gpx.base.Module):
             j = [jnp.arange(1, int(m) + 1) for m in self.num_bfs]
         except:
             j = [jnp.arange(1, self.num_bfs + 1)]
-        self.js = jnp.array(list(product(*[x.flatten() for x in j])), dtype=jnp.float64)
-        self.num_bfs = jnp.atleast_1d(jnp.array(self.num_bfs))#.astype(int)
+        # self.js = jnp.array(list(product(*[x.flatten() for x in j])), dtype=jnp.float64)
+        self.js = jnp.vstack([x.ravel() for x in jnp.meshgrid(*j, indexing='ij')]).T.astype(jnp.float64)
+        self.num_bfs = jnp.atleast_1d(jnp.array(self.num_bfs)).astype(jnp.float64)#.astype(int)
         D  = len(self.num_bfs)
         self.L = jnp.atleast_1d(jnp.array(self.L))
         self.center = jnp.atleast_1d(jnp.array(self.center))

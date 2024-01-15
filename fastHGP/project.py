@@ -2,7 +2,7 @@ import jax
 import jax.numpy as jnp
 import jax.scipy as jsp
 import cola
-from gpjax.gaussian_distribution import GaussianDistribution
+from gpjax.distributions import GaussianDistribution
 from .utils import integrate
 
 
