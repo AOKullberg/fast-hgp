@@ -20,7 +20,8 @@ from .gp_utils import (
 from .hgp import HGP
 from fastHGP.selectors import (
     Selector,
-    BoundSelector
+    BoundSelector,
+    DualCost
 )
 
 @dataclass 
@@ -54,7 +55,7 @@ class SHGP(gpx.gps.AbstractPosterior):
     jitter: ScalarFloat = static_field(1e-6)
     alpha: Float[Array, "M"] = param_field(jnp.zeros((1,)), trainable=False)
     Gamma: Float[Array, "M**D"] = param_field(jnp.zeros((1,)), trainable=False)
-    approximate_selector: Selector = param_field(default_factory=lambda: BoundSelector(),
+    approximate_selector: Selector = param_field(default_factory=lambda: BoundSelector(DualCost()),
                                                  trainable=False)
 
     def __post_init__(self):
