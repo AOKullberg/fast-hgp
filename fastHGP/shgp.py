@@ -63,8 +63,8 @@ class SHGP(gpx.gps.AbstractPosterior):
         M = self.bf.M
         D = len(m)
         self.alpha = jnp.zeros((M,))
-        self.p = jnp.array(list(product(*[[-1, 1]]*D))) # permutations
-        self.unique_k = jnp.vstack([x.flatten() for x in jnp.meshgrid(*[jnp.arange(1-mi, 2*mi+1) for mi in m])]).T
+        self.p = jnp.array(list(product(*[[-1, 1]]*D))).astype(jnp.float64) # permutations
+        self.unique_k = jnp.vstack([x.flatten() for x in jnp.meshgrid(*[jnp.arange(1-mi, 2*mi+1) for mi in m], indexing='ij')]).T.astype(jnp.float64)
         self.Gamma = jnp.zeros((self.unique_k.shape[0],))
         self.indices = self.bf.js
         # self.indices = jnp.vstack([x.flatten() for x in jnp.meshgrid(*self.bf.j)]).T
@@ -75,6 +75,10 @@ class SHGP(gpx.gps.AbstractPosterior):
                             bf=self.bf.replace(js=self.bf.js[inds]))
 
     predict = HGP.predict
+
+    @property
+    def M(self):
+        return self.bf.M
 
     def update_with_batch(self, data):
         g = gamma(data.X, self.unique_k, self.bf.L)
@@ -97,7 +101,7 @@ class SHGP(gpx.gps.AbstractPosterior):
 
     @property
     def mean_parameters(self):
-        return dual_to_mean(self.alpha, self.B, self.bf, self.prior.kernel.spectral_density, self.likelihood.obs_noise)
+        return dual_to_mean(self.alpha, self.B, self.bf, self.prior.kernel.spectral_density, self.likelihood.obs_stddev)
 
 @dataclass
 class TSHGP(SHGP):

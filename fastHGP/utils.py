@@ -1,11 +1,14 @@
 from itertools import combinations_with_replacement
 import jax
 import jax.numpy as jnp
+from jax.tree_util import tree_flatten, tree_unflatten
+import pickle
 
-# @jax.jit
+@jax.jit
 def gamma(x, ks, Ld):
     # Compute all possible gammas
-    return jnp.prod(1/Ld) * jnp.sum(vxgamma(x, ks, Ld), axis=0)
+    # return jnp.prod(1/Ld) * jnp.sum(vxgamma(x, ks, Ld), axis=0)
+    return jnp.prod(1 / (2 * Ld)) * jnp.sum(vxgamma(x, ks, Ld), axis=0)
 
 @jax.jit
 def TT_gamma(Gamma, md, i, j, p):
@@ -73,9 +76,10 @@ def gamma_k(x, kis, Ls):
     Ls - a vector of Ld, d=1,...,D (1 x D)
     Kis - a vector kd, d=1,...,D (1 x D)
     """
-    D = len(kis)
-    return 1 / (2 ** D) * jnp.prod(jnp.sin(theta(x, kis, Ls)))
-
+    # D = len(kis)
+    # return 1 / (2 ** D) * jnp.prod(jnp.sin(theta(x, kis, Ls)))
+    return jnp.prod(jnp.sin(theta(x, kis, Ls)))
+    
 # Vectorized over different k
 vkgamma = jax.jit(jax.vmap(gamma_k, (None, 0, None), 0))
 # Vectorized over x and k
@@ -108,3 +112,15 @@ def integrate(fun, limits, N=100, args=[]):
     a, b = limits
     scale = (b - a)/2
     return jnp.prod(scale) * wi @ fun(scale * xi + (a + b)/2, *args)
+
+def save_model(model, filename):
+    values, tree = tree_flatten(model)
+    jnp.savez(filename + "_values", *values)
+    with open(filename + ".pickle", "wb") as file:
+        pickle.dump(tree, file)
+
+def load_model(filename):
+    values = list(jnp.load(filename + "_values.npz").values())
+    with open(filename + ".pickle", "rb") as file:
+        tree = pickle.load(file)
+    return tree_unflatten(tree, values)
