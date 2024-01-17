@@ -57,13 +57,13 @@ class SHGP(gpx.gps.AbstractPosterior):
     Gamma: Float[Array, "M**D"] = param_field(jnp.zeros((1,)), trainable=False)
     approximate_selector: Selector = param_field(default_factory=lambda: BoundSelector(DualCost()),
                                                  trainable=False)
+    # ep: Float[Array, "M"] = param_field(default=None, trainable=False)
 
     def __post_init__(self):
         m = self.bf.num_bfs
         M = self.bf.M
-        D = len(m)
         self.alpha = jnp.zeros((M,))
-        self.p = jnp.array(list(product(*[[-1, 1]]*D))).astype(jnp.float64) # permutations
+        # self.ep = jnp.array(list(product(*[[-1, 1]]*D))).astype(jnp.float64) # permutations
         self.unique_k = jnp.vstack([x.flatten() for x in jnp.meshgrid(*[jnp.arange(1-mi, 2*mi+1) for mi in m], indexing='ij')]).T.astype(jnp.float64)
         self.Gamma = jnp.zeros((self.unique_k.shape[0],))
         self.indices = self.bf.js
@@ -75,6 +75,12 @@ class SHGP(gpx.gps.AbstractPosterior):
                             bf=self.bf.replace(js=self.bf.js[inds]))
 
     predict = HGP.predict
+
+    @property
+    def ep(self):
+        # Creates all permutations necessary for gamma computation
+        D = self.unique_k.shape[1]
+        return jnp.vstack([x.flatten() for x in jnp.meshgrid(*jnp.array([[-1., 1.]]*D), indexing='ij')]).T
 
     @property
     def M(self):
@@ -89,11 +95,11 @@ class SHGP(gpx.gps.AbstractPosterior):
 
     @property
     def B(self):
-        return B(self.Gamma, self.indices, self.bf.num_bfs, self.p)
+        return B(self.Gamma, self.indices, self.bf.num_bfs, self.ep)
 
     @property
     def B_diag(self):
-        return B_diag(self.Gamma, self.indices, self.bf.num_bfs, self.p)
+        return B_diag(self.Gamma, self.indices, self.bf.num_bfs, self.ep)
 
     @property
     def dual_parameters(self):
