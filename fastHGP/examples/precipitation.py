@@ -7,12 +7,13 @@ import os
 
 def generate_data():
     data = sio.loadmat(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../data/data.mat"))
-    return gpx.Dataset(data['x'], data['y'])
+    X, y = data['x'], data['y']
+    boundary = jnp.array([X.min(axis=0), X.max(axis=0)])
+    return gpx.Dataset(X - boundary.mean(axis=0), y) # Center the data for the HGP
 
 def build_bf(m, D):
     boundary = jnp.array([D.X.min(axis=0), D.X.max(axis=0)])
-    hgp_centers = boundary.mean(axis=0)
     hgp_boundary = boundary + jnp.array([[-1], [1]]) * jnp.diff(boundary, axis=0)*0.1
     Ls = jnp.diff(hgp_boundary, axis=0) / 2
     ms = jnp.ones((2,)) * m
-    return LaplaceBF(ms, Ls, hgp_centers)
+    return LaplaceBF(num_bfs=ms, L=Ls)
