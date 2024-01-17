@@ -61,7 +61,7 @@ class DifferenceSelector(Selector):
 
 @dataclass
 class BoundSelector(Selector):
-    tolerance: float = param_field(default=1, trainable=False)
+    tolerance: float = param_field(default=1., trainable=False)
     def __call__(self, test_input, gp):
         cost, inds = self.cost(test_input, gp)
         C = jnp.cumsum(cost)
