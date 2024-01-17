@@ -1,3 +1,3 @@
 _target_: gpjax.likelihoods.Gaussian
 num_datapoints: ${N}
-obs_noise: 0.01
+obs_stddev: 0.01

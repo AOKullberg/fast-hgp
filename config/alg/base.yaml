@@ -1,4 +1,3 @@
 prior: ${prior}
 likelihood: ${likelihood}
 bf: ${bf}
-approximate_selector: difference

@@ -18,7 +18,7 @@ kernel:
   variance: 0.25
 
 prior:
-  _target_: gpjax.Prior
+  _target_: gpjax.gps.Prior
   mean_function:
     _target_: gpjax.mean_functions.Zero
   kernel: ${..kernel}
@@ -26,7 +26,7 @@ prior:
 likelihood:
   _target_: gpjax.likelihoods.Gaussian
   num_datapoints: ${..N}
-  obs_noise: 
+  obs_stddev: 
     _target_: jax.numpy.array
     object: [0.01]
 
