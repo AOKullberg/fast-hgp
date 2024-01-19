@@ -72,7 +72,7 @@ alg.B
                     objective=objective,
                     train_data=train_data,
                     optim=ox.adam(learning_rate=1e-1),
-                    num_iters=50,
+                    num_iters=60,
                     key=key)
     return alg, result
 
