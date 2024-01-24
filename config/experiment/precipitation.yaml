@@ -6,7 +6,7 @@ defaults:
 hydra:
   sweeper:
     params:
-      alg: choice(HGP, SHGP)
+      alg: choice(SHGP, HGP)
       bf.m: range(10, 61, 5)
 
 generator: fastHGP.examples.precipitation
@@ -35,7 +35,7 @@ bf:
   D: 
     _target_: ${generator}.generate_data
 
-N: 1000
+N: 5776
 data_generator: 
   _partial_: true
   _target_: ${..generator}.generate_data

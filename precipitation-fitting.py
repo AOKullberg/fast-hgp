@@ -1,5 +1,4 @@
 import logging
-import timeit
 
 from omegaconf import DictConfig
 import hydra
@@ -14,9 +13,11 @@ import jax.random as jr
 log = logging.getLogger(__name__)
 
 from gpjax.typing import ScalarFloat
+
 from cola.linalg.decompositions.decompositions import Cholesky
 import cola
-from fastHGP.hgp import HGP
+
+from fastHGP.shgp import HGP
 from fastHGP.utils import save_model
 
 class HGPobjective(gpx.objectives.AbstractObjective):
@@ -39,42 +40,23 @@ class HGPobjective(gpx.objectives.AbstractObjective):
 objective = jax.jit(HGPobjective(negative=True))
 key = jr.PRNGKey(13)
 
-setup = \
-"""import jax
-import gpjax as gpx
-def train_loop(model, inp):
-    xi, yi = inp
-    Di = gpx.Dataset(xi[None, :], yi[None, :])
-    model = model.update_with_batch(Di)
-    return model, None
-"""
-
 def eval_data(alg, train_data):
-    log.parent.disabled = True
     # Update w/ data
     alg = alg.update_with_batch(train_data)
-    func = \
-"""
-jax.lax.scan(train_loop, alg, [train_data.X, train_data.y])
-alg.B
-"""
-
-    t = timeit.repeat(func,
-                      repeat=5,
-                      number=5,
-                      globals=locals(),
-                      setup=setup)
-    result = dict(
-        times = t,
-        m = alg.M,
-    )
     alg, _ = gpx.fit(model=alg,
                     objective=objective,
                     train_data=train_data,
                     optim=ox.adam(learning_rate=1e-1),
                     num_iters=60,
                     key=key)
-    return alg, result
+    gp = alg.prior * alg.likelihood
+    gp, _ = gpx.fit(model=gp,
+                    objective=gpx.objectives.ConjugateMLL(negative=True),
+                    train_data=train_data,
+                    optim=ox.adam(learning_rate=1e-1),
+                    num_iters=60,
+                    key=key)
+    return alg, gp
 
 @hydra.main(version_base=None, config_path="config", config_name="config")
 def main(cfg: DictConfig) -> None:
@@ -85,12 +67,11 @@ def main(cfg: DictConfig) -> None:
     log.info("Generating data")
     D = data_generator()
     log.info("Data generated!")
-    alg, result = eval_data(alg, D)
+    alg, gp = eval_data(alg, D)
     log.info("Evaluation complete")
     log.info("Saving data and quitting")
-    jnp.savez('result.npz',
-             **result)
-    save_model(alg, "model")
+    save_model(alg, "shgp")
+    save_model(gp, "full_gp")
     
 if __name__ == "__main__":
     main()
