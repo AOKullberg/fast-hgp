@@ -1,1 +1,13 @@
 __pycache__
+*.eps
+*.csv
+*.npz
+*.json
+*.pickle
+ipynb_checkpoints/
+mathematica/
+multirun/
+outputs/
+VisionenDataScrambled/
+doc/
+tmp/
