@@ -60,8 +60,8 @@ alg.B
 """
 
     t = timeit.repeat(func,
-                      repeat=5,
-                      number=5,
+                      repeat=15,
+                      number=1,
                       globals=locals(),
                       setup=setup)
     result = dict(
