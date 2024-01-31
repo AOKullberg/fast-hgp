@@ -11,3 +11,4 @@ omegaconf==2.3.0
 optax==0.1.7
 shapely
 pyproj
+tikzplotlib
