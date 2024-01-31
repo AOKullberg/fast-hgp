@@ -9,7 +9,7 @@ def generate_data():
     data = sio.loadmat(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../data/data.mat"))
     X, y = data['x'], data['y']
     boundary = jnp.array([X.min(axis=0), X.max(axis=0)])
-    return gpx.Dataset(X - boundary.mean(axis=0), y) # Center the data for the HGP
+    return gpx.Dataset(X - boundary.mean(axis=0), y) # Center the data for the HGP, y is already centered
 
 def build_bf(m, D):
     boundary = jnp.array([D.X.min(axis=0), D.X.max(axis=0)])
