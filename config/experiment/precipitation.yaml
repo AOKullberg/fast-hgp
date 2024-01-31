@@ -7,14 +7,14 @@ hydra:
   sweeper:
     params:
       alg: choice(SHGP, HGP)
-      bf.m: range(10, 61, 5)
+      bf.m: range(5, 66, 5)
 
 generator: fastHGP.examples.precipitation
 
 kernel:
   _target_: fastHGP.kernels.SE
   lengthscale: 1.0
-  variance: 1.0
+  variance: 10.0
 
 prior:
   _target_: gpjax.gps.Prior
