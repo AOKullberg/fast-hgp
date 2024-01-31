@@ -17,7 +17,7 @@ from gpjax.typing import ScalarFloat
 from cola.linalg.decompositions.decompositions import Cholesky
 import cola
 
-from fastHGP.shgp import HGP
+from fastHGP.hgp import HGP
 from fastHGP.utils import save_model
 
 class HGPobjective(gpx.objectives.AbstractObjective):
