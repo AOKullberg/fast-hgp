@@ -66,7 +66,7 @@ for model in results.keys():
     results[model]['m'] = [int(x) for x in results[model]['m']]
 
 import json
-with open("timings_alternate.json", "w") as file:
+with open("hankel_timings.json", "w") as file:
     json.dump(results, file, indent=4)
 
 
@@ -86,5 +86,5 @@ for model, mres in results.items():
 import pandas as pd
 for model, val in to_csv.items():
     D = pd.DataFrame(val)
-    with open(model+'timing_alternate.csv', "w") as file:
+    with open(model+'timing.csv', "w") as file:
         D.to_csv(file, index=False)
