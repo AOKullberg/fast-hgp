@@ -3,12 +3,12 @@ jax.config.update("jax_enable_x64", True)
 import gpjax as gpx
 import jax.numpy as jnp
 import jax.random as jr
-from fastHGP.shgp import SHGP
-from fastHGP.hgp import HGP
-from fastHGP.kernels import SE, LaplaceBF
-from fastHGP.utils import gamma
+from fasthgp.shgp import SHGP
+from fasthgp.hgp import HGP
+from fasthgp.kernels import SE, LaplaceBF
+from fasthgp.utils import gamma
 key = jr.PRNGKey(13)
-import fastHGP.examples.random_example as re
+import fasthgp.examples.random_example as re
 from tqdm import tqdm
 from timeit import repeat
 

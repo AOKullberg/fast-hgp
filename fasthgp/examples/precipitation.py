@@ -1,8 +1,10 @@
+# Precipitation data set
+
 import jax.numpy as jnp
 import jax.random as jr
 import scipy.io as sio
 import gpjax as gpx
-from fastHGP.kernels import LaplaceBF
+from fasthgp.kernels import LaplaceBF
 import os
 
 def generate_data():

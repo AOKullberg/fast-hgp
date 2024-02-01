@@ -8,12 +8,26 @@ from jaxtyping import Float, Array
 
 @dataclass
 class LaplaceBF(gpx.base.Module):
+    """Laplace basis functions on a rectangular domain.
+
+    Parameters
+    ----------
+    num_bfs : list, array_like
+        Number of basis functions to use for each dimension.
+    L : list, array_like
+        Domain size in each dimension.
+    center : list, array_like
+        Center of the domain in each dimension (do not use)
+    js : *do not specify*
+    """    
     num_bfs: Float[Array, "M"] = param_field(default=jnp.ones((1,)), trainable=False)
     L: Float[Array, "M"] = param_field(default=jnp.ones((1,)), trainable=False)
     center: Float[Array, "M"] = param_field(default=jnp.zeros((1,)), trainable=False)
     js: Float[Array, "M"] = param_field(default=jnp.zeros((1,)), trainable=False)
 
     def __post_init__(self):
+        """Initializes necessary parameters for the Laplace basis functions.
+        """        
         try:
             j = [jnp.arange(1, int(m) + 1) for m in self.num_bfs]
         except:
@@ -43,6 +57,12 @@ class LaplaceBF(gpx.base.Module):
         return jax.vmap(jax.vmap(self._1d_call, (None, 0), 0), (0, None), 0)(x, self.js)
 
     def eigenvalues(self):
+        """Eigenvalues of the basis functions.
+
+        Returns
+        -------
+        array_like
+        """        
         j = self.js
         L = self.L
         lambda_j = ( jnp.pi * j / (2 * L) )**2

@@ -16,8 +16,8 @@ log = logging.getLogger(__name__)
 from gpjax.typing import ScalarFloat
 from cola.linalg.decompositions.decompositions import Cholesky
 import cola
-from fastHGP.hgp import HGP
-from fastHGP.utils import save_model
+from fasthgp.hgp import HGP
+from fasthgp.utils import save_model
 
 class HGPobjective(gpx.objectives.AbstractObjective):
     def step(self, model: HGP, train_data: gpx.Dataset) -> ScalarFloat:

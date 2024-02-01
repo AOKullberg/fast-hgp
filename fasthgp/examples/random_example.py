@@ -1,7 +1,9 @@
+# Random 3D example (drawn from a prior)
+
 import jax.numpy as jnp
 import jax.random as jr
 import gpjax as gpx
-from fastHGP.kernels import LaplaceBF
+from fasthgp.kernels import LaplaceBF
 
 def generate_data(kernel, N=300, key=jr.PRNGKey(13)):
     x3d = jr.uniform(key, shape=(N, 3))*2-1
