@@ -10,9 +10,9 @@ def project(old_bf, new_bf, qu, **kwargs):
 
     Parameters
     ----------
-    old_bf : fastHGP.kernels.LaplaceBF
+    old_bf : fasthgp.kernels.LaplaceBF
         Old basis.
-    new_bf : fastHGP.kernels.LaplaceBF
+    new_bf : fasthgp.kernels.LaplaceBF
         New basis.
     qu : GaussianDistribution
         Variational distribution on old basis.
@@ -50,9 +50,9 @@ def project_regularized(old_bf, new_bf, qu, P, **kwargs):
 
     Parameters
     ----------
-    old_bf : fastHGP.kernels.LaplaceBF
+    old_bf : fasthgp.kernels.LaplaceBF
         Old basis.
-    new_bf : fastHGP.kernels.LaplaceBF
+    new_bf : fasthgp.kernels.LaplaceBF
         New basis.
     qu : GaussianDistribution
         Variational distribution on old basis.

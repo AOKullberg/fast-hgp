@@ -165,7 +165,7 @@ class HGP(gpx.gps.AbstractPosterior):
 
         Parameters
         ----------
-        new_bf : fastHGP.kernels.LaplaceBF
+        new_bf : fasthgp.kernels.LaplaceBF
             Basis to change to.
 
         Returns
@@ -191,7 +191,7 @@ class HGP(gpx.gps.AbstractPosterior):
 
         Parameters
         ----------
-        new_bf : fastHGP.kernels.LaplaceBF
+        new_bf : fasthgp.kernels.LaplaceBF
             Basis to change to.
 
         Returns
@@ -225,7 +225,7 @@ class HGP(gpx.gps.AbstractPosterior):
 
         Parameters
         ----------
-        new_bf : fastHGP.kernels.LaplaceBF
+        new_bf : fasthgp.kernels.LaplaceBF
             Basis to change to
         inputs : array_like
             Inputs at which to do moment matching.
@@ -250,7 +250,7 @@ class HGP(gpx.gps.AbstractPosterior):
 
         Parameters
         ----------
-        new_bf : fastHGP.kernels.LaplaceBF
+        new_bf : fasthgp.kernels.LaplaceBF
             Basis to change to
         D1 : array_like
             Inputs at which to do moment matching toward previous posterior.

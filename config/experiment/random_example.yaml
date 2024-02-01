@@ -10,10 +10,10 @@ hydra:
       # alg: choice(SHGP, TSHGP, HGP)
       bf.m: range(2, 21)
 
-generator: fastHGP.examples.random_example
+generator: fasthgp.examples.random_example
 
 kernel:
-  _target_: fastHGP.kernels.SE
+  _target_: fasthgp.kernels.SE
   lengthscale: 0.2
   variance: 0.25
 

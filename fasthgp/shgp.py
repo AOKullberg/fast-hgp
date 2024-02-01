@@ -50,7 +50,7 @@ class SHGP(gpx.gps.AbstractPosterior):
         First-order dual parameter
     Gamma : 
         Condensed second-order dual parameter (B in HGP)
-    approximate_selector : fastHGP.Selector
+    approximate_selector : fasthgp.Selector
         A basis function selector for approximate predictions -- not necessary.
 
     """

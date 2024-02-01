@@ -9,10 +9,10 @@ hydra:
       alg: choice(SHGP, HGP)
       bf.m: range(5, 66, 5)
 
-generator: fastHGP.examples.precipitation
+generator: fasthgp.examples.precipitation
 
 kernel:
-  _target_: fastHGP.kernels.SE
+  _target_: fasthgp.kernels.SE
   lengthscale: 1.0
   variance: 10.0
 

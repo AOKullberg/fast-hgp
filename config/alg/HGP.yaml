@@ -1,3 +1,3 @@
 defaults:
   - base
-_target_: fastHGP.hgp.HGP
+_target_: fasthgp.hgp.HGP

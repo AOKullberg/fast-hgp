@@ -1,2 +1,2 @@
-_target_: fastHGP.selectors.DifferenceSelector
+_target_: fasthgp.selectors.DifferenceSelector
 tolerance: 1e-3
