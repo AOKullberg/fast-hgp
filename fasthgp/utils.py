@@ -84,7 +84,7 @@ def ind(k: Num[Array, "D"],
     return c @ (k - (1 - md))
 
 @jax.jit
-def T_gamma(Gamma: Num[Array, "m1m2...mD"], 
+def T_gamma(Gamma: Num[Array, "N"], 
              md: Num[Array, "D"], 
              i: Num[Array, "D"], 
              j: Num[Array, "D"], 
@@ -112,7 +112,7 @@ def T_gamma(Gamma: Num[Array, "m1m2...mD"],
     return c @ Gamma[indices.astype(int)]
 
 @jax.jit
-def B(Gamma: Num[Array, "m1m2...mD"], 
+def B(Gamma: Num[Array, "N"], 
        indices: Num[Array, ""], 
        md: Num[Array, "D"], 
        p: Num[Array, "L"]) -> Float[Array, "M M"]:
@@ -166,7 +166,7 @@ def B_triu(Gamma: Num[Array, "m1 m2 ... mD"],
     return jax.vmap(T_gamma, (None, None, 0, 0, None), 0)(Gamma, md, i, j, p)
 
 @jax.jit
-def B_diag(Gamma: Num[Array, "m1m2...mD"], 
+def B_diag(Gamma: Num[Array, "N"], 
             indices: Num[Array, ""], 
             md: Num[Array, "D"], 
             p: Num[Array, "L"]) -> Float[Array, "M"]:
