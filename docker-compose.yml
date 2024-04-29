@@ -1,7 +1,7 @@
 version: '2'
 services:
   latest:
-    image: fast-hgp:latest
+    image: fasthgp:latest
     ports:
     - 8888:8888
     volumes:
