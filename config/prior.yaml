@@ -1,4 +1,0 @@
-_target_: gpjax.gps.Prior
-mean_function:
-  _target_: gpjax.mean_functions.Zero
-kernel: ${kernel}

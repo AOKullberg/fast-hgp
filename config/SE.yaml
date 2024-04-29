@@ -1,4 +1,0 @@
-_target_: fasthgp.kernels.SE
-_partial_: true
-lengthscale: 1.0
-variance: 0.25

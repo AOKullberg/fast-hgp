@@ -1,3 +1,0 @@
-_target_: gpjax.likelihoods.Gaussian
-num_datapoints: ${N}
-obs_stddev: 0.01
