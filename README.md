@@ -3,7 +3,7 @@ A reference implementation of fast Hilbert-space GPs.
 Can utilize the apparent Hankel/Toeplitz structure in HGPs.
 Can further provide very fast approximate predictions in HGPs.
 This repository only contains the reference implementation. 
-For usage, please see [HGP Hankel Structure](https://github.com/AOKullberg/hgp-hankel-structure) and [Adaptive BF Selection][https://github.com/AOKullberg/adaptive-bf-selection].
+For usage, please see [HGP Hankel Structure](https://github.com/AOKullberg/hgp-hankel-structure) and [Adaptive BF Selection](https://github.com/AOKullberg/adaptive-bf-selection).
 
 ## Getting started via Docker
 A Dockerfile is provided which should contain everything necessary to run stuff.
